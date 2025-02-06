@@ -29,8 +29,6 @@ Contribution guidelines goes here
 
 ## License
 
-License type goes here
-
 ## Acknowledgments
 
 This project is part of a practical assignment for the Operating Systems course at Université d'Évry Val d'Essonne - Paris Saclay.
