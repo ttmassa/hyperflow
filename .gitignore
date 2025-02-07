@@ -1,2 +1,5 @@
 # File used to write down what I need to do next
 features.txt
+
+# Python cache files
+__pycache__/
