@@ -3,3 +3,6 @@ features.txt
 
 # Python cache files
 __pycache__/
+
+# PDFs for the project file
+*.pdf
