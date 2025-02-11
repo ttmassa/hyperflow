@@ -12,6 +12,19 @@ def test_task_system_initialization():
     assert task_system.tasks["T2"] == task2
     assert task_system.precedence == precedence
 
+def test_task_system_initialization_duplicate_names():
+    # Test if the TaskSystem raises an error when duplicate task names are detected
+    task1 = Task(name="T1")
+    task2 = Task(name="T1")
+    precedence = {"T2": ["T1"]}
+    
+    try:
+        # Attempt to initialize TaskSystem with duplicate task names
+        TaskSystem(tasks=[task1, task2], precedence=precedence)
+        assert False
+    except ValueError as e:
+        assert str(e) == "Duplicate task names detected"
+
 def test_task_system_get_dependencies():
     # Test the getDependencies method
     task1 = Task(name="T1")
