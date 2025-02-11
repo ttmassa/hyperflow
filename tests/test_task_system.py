@@ -2,6 +2,7 @@ from src.task_system import TaskSystem
 from src.task import Task
 
 def test_task_system_initialization():
+    # Basic test to check if the TaskSystem is initialized correctly
     task1 = Task(name="T1")
     task2 = Task(name="T2")
     precedence = {"T2": ["T1"]}
@@ -12,6 +13,7 @@ def test_task_system_initialization():
     assert task_system.precedence == precedence
 
 def test_task_system_get_dependencies():
+    # Test the getDependencies method
     task1 = Task(name="T1")
     task2 = Task(name="T2")
     precedence = {"T2": ["T1"]}
@@ -21,6 +23,7 @@ def test_task_system_get_dependencies():
     assert task_system.getDependencies("T1") == []
 
 def test_task_system_run_seq():
+    # Test the runSeq method
     X = None
     Y = None
 
@@ -43,6 +46,7 @@ def test_task_system_run_seq():
     assert Y == 2
 
 def test_task_system_run():
+    # Test the run method
     X = None
     Y = None
 
