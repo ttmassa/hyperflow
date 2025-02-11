@@ -7,6 +7,11 @@ class TaskSystem:
         # Dictionary of task dependencies
         self.precedence = precedence
 
+        # Check if all names are unique
+        # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
+        if len(self.tasks) != len(tasks):
+            raise ValueError("Duplicate task names detected")
+
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
         return self.precedence.get(task_name, [])
