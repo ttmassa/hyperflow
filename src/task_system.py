@@ -12,11 +12,16 @@ class TaskSystem:
         return self.precedence.get(task_name, [])
     
     def runSeq(self):
+        # Run tasks sequentially
+        # Does not handle circular dependencies cases yet
         executed = set()
 
         # We need to sort the tasks by the number of dependencies to ensure that all tasks are executed after their dependencies
-        # Does not handle circular dependencies case
-        for task_name in sorted(self.precedence, key=lambda t: len(self.getDependencies(t))):
+        # We also need to include the tasks that have no dependencies cause the sorting logic will not take them into account otherwise
+        all_tasks = set(self.tasks.keys())
+        sorted_tasks = sorted(all_tasks, key=lambda t: len(self.getDependencies(t)))
+
+        for task_name in sorted_tasks:
             # Check if all dependencies of the current task have been executed
             for dep in self.getDependencies(task_name):
                 if dep not in executed:
