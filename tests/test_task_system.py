@@ -25,6 +25,19 @@ def test_task_system_initialization_duplicate_names():
     except ValueError as e:
         assert str(e) == "Duplicate task names detected"
 
+def test_task_system_check_circular_dependencies():
+    # Test if the TaskSystem raises an error when circular dependencies are detected
+    task1 = Task(name="T1")
+    task2 = Task(name="T2")
+    precedence = {"T2": ["T1"], "T1": ["T2"]}
+    
+    try:
+        # Attempt to initialize TaskSystem with circular dependencies
+        TaskSystem(tasks=[task1, task2], precedence=precedence)
+        assert False
+    except Exception as e:
+        assert str(e) == "Task T1 has a circular dependency"
+
 def test_task_system_get_dependencies():
     # Test the getDependencies method
     task1 = Task(name="T1")
