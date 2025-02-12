@@ -11,6 +11,35 @@ class TaskSystem:
         # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
         if len(self.tasks) != len(tasks):
             raise ValueError("Duplicate task names detected")
+        
+        # Check for circular dependencies
+        self.checkCircularDependencies()
+
+    def checkCircularDependencies(self):
+        visited = set()
+        rec_stack = set()
+
+        # Depth-first search to detect circular dependencies
+        def dfs(task_name):
+            # Task is already in the current path being explored so circular dependency
+            if task_name in rec_stack:
+                raise Exception(f"Task {task_name} has a circular dependency")
+            
+            if task_name in visited:
+                return
+            
+            visited.add(task_name)
+            rec_stack.add(task_name)
+
+            for dep in self.getDependencies(task_name):
+                dfs(dep)
+            # Remove the task from the current path
+            rec_stack.remove(task_name)
+
+        # Outer loop
+        for task_name in self.tasks.keys():
+            if task_name not in visited:
+                dfs(task_name)
 
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
