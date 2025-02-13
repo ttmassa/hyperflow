@@ -7,13 +7,31 @@ class TaskSystem:
         # Dictionary of task dependencies
         self.precedence = precedence
 
+        # Check for empty task names
+        self.checkEmptyTaskNames()
+
         # Check if all names are unique
-        # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
-        if len(self.tasks) != len(tasks):
-            raise ValueError("Duplicate task names detected")
+        self.checkUniqueTaskNames()
         
         # Check for circular dependencies
         self.checkCircularDependencies()
+
+        # Check for self-dependencies
+        self.checkSelfDependencies()
+
+        # Check for missing dependencies
+        self.checkMissingDependencies()
+
+    # The Task constructor already ensures that a name is provided but why not check it again 
+    def checkEmptyTaskNames(self):
+        for task_name in self.tasks.keys():
+            if not task_name:
+                raise ValueError("Task name cannot be empty")
+            
+    def checkUniqueTaskNames(self):
+        # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
+        if len(self.tasks) != len(self.tasks):
+            raise ValueError("Duplicate task names detected")
 
     def checkCircularDependencies(self):
         visited = set()
@@ -41,13 +59,28 @@ class TaskSystem:
             if task_name not in visited:
                 dfs(task_name)
 
+    def checkSelfDependencies(self):
+        # Loop through all tasks and check if they depend on themselves
+        for task_name, deps in self.precedence.items():
+            if task_name in deps:
+                raise ValueError(f"Task {task_name} has a self-dependency")
+            
+    def checkMissingDependencies(self):
+        # Loop through all tasks and check if they depend on tasks that do not exist
+        for task_name, deps in self.precedence.items():
+            # Task does not exist so useless 
+            if task_name not in self.tasks:
+                raise ValueError(f"Task {task_name} is in the dependency list but does not exist")
+            for dep in deps:
+                if dep not in self.tasks:
+                    raise ValueError(f"Task {task_name} depends on {dep} which does not exist")
+                
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
         return self.precedence.get(task_name, [])
     
     def runSeq(self):
         # Run tasks sequentially
-        # Does not handle circular dependencies cases yet
         executed = set()
 
         # We need to sort the tasks by the number of dependencies to ensure that all tasks are executed after their dependencies
