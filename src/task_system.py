@@ -7,12 +7,14 @@ class TaskSystem:
         # Dictionary of task dependencies
         self.precedence = precedence
 
+        # Check for duplicate task names
+        # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
+        if len(self.tasks) != len(tasks):
+            raise ValueError("Duplicate task names detected")
+
         # Check for empty task names
         self.checkEmptyTaskNames()
 
-        # Check if all names are unique
-        self.checkUniqueTaskNames()
-        
         # Check for circular dependencies
         self.checkCircularDependencies()
 
@@ -25,11 +27,6 @@ class TaskSystem:
             if not task_name:
                 raise ValueError("Task name cannot be empty")
             
-    def checkUniqueTaskNames(self):
-        # Dictionary overwrites duplicates keys so we just need to compare its length with the number of tasks
-        if len(self.tasks) != len(self.tasks):
-            raise ValueError("Duplicate task names detected")
-
     def checkCircularDependencies(self):
         visited = set()
         rec_stack = set()
