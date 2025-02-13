@@ -16,9 +16,6 @@ class TaskSystem:
         # Check for circular dependencies
         self.checkCircularDependencies()
 
-        # Check for self-dependencies
-        self.checkSelfDependencies()
-
         # Check for missing dependencies
         self.checkMissingDependencies()
 
@@ -58,12 +55,6 @@ class TaskSystem:
         for task_name in self.tasks.keys():
             if task_name not in visited:
                 dfs(task_name)
-
-    def checkSelfDependencies(self):
-        # Loop through all tasks and check if they depend on themselves
-        for task_name, deps in self.precedence.items():
-            if task_name in deps:
-                raise ValueError(f"Self-dependency detected: Task '{task_name}' cannot depend on itself.")
             
     def checkMissingDependencies(self):
         # Loop through all tasks and check if they depend on tasks that do not exist
