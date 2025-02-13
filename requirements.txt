@@ -1,3 +1,4 @@
 # File used to list all the dependencies of the project
 pytest
 networkx
+matplotlib
