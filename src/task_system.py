@@ -41,7 +41,7 @@ class TaskSystem:
         def dfs(task_name):
             # Task is already in the current path being explored so circular dependency
             if task_name in rec_stack:
-                raise Exception(f"Task {task_name} has a circular dependency")
+                raise Exception(f"Circular dependency detected: Task '{task_name}' is part of a cycle.")
             
             if task_name in visited:
                 return
@@ -63,17 +63,17 @@ class TaskSystem:
         # Loop through all tasks and check if they depend on themselves
         for task_name, deps in self.precedence.items():
             if task_name in deps:
-                raise ValueError(f"Task {task_name} has a self-dependency")
+                raise ValueError(f"Self-dependency detected: Task '{task_name}' cannot depend on itself.")
             
     def checkMissingDependencies(self):
         # Loop through all tasks and check if they depend on tasks that do not exist
         for task_name, deps in self.precedence.items():
             # Task does not exist so useless 
             if task_name not in self.tasks:
-                raise ValueError(f"Task {task_name} is in the dependency list but does not exist")
+                raise ValueError(f"Missing task detected: Task '{task_name}' is listed in dependencies but does not exist.")
             for dep in deps:
                 if dep not in self.tasks:
-                    raise ValueError(f"Task {task_name} depends on {dep} which does not exist")
+                    raise ValueError(f"Missing dependency detected: Task '{task_name}' depends on '{dep}' which does not exist.")
                 
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
