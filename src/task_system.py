@@ -1,4 +1,7 @@
 import threading
+import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
 
 class TaskSystem:
     def __init__(self, tasks, precedence):
@@ -106,3 +109,59 @@ class TaskSystem:
         # Wait for all threads to finish
         for thread in threads:
             thread.join()
+
+    """
+        After some (long) research for drawing graphs with levels, I found that Graphviz is 
+        one of the most popular tools for this purpose. However, using Graphviz requires 
+        the pygraphviz package, which is not readily available on Windows without 
+        installing Graphviz separately. To avoid relying on external dependencies, I 
+        decided to manually implement the level logic using the networkx and matplotlib libraries.
+    """
+    def draw(self):
+        # Create directed graph
+        G = nx.DiGraph()
+
+        # Add nodes 
+        for task_name in self.tasks.keys():
+            G.add_node(task_name)
+
+        # Add edges 
+        for task_name, deps in self.precedence.items():
+            for dep in deps:
+                G.add_edge(dep, task_name)
+
+        # Calculate task levels
+        levels = {}
+        for task_name in nx.topological_sort(G):
+            level = max([levels.get(dep, 0) for dep in G.predecessors(task_name)], default=-1) + 1
+            levels[task_name] = level
+
+        # Group tasks by level
+        level_dict = {}
+        for task, level in levels.items():
+            if level not in level_dict:
+                level_dict[level] = []
+            level_dict[level].append(task)
+
+        # Calculate positions for each task
+        pos = {}
+        for level, tasks in level_dict.items():
+            x_positions = np.linspace(-len(tasks) / 2, len(tasks) / 2, len(tasks))  # Spread evenly
+            for i, task in enumerate(tasks):
+                pos[task] = (x_positions[i], -level)  # Y is inverted for top-down layout
+
+        # Calculate node sizes based on name length
+        node_sizes = [3000 + 100 * len(task_name) for task_name in G.nodes()]
+
+        # Draw the graph
+        plt.figure(figsize=(8, 6))
+        nx.draw(
+            G, pos, with_labels=True, 
+            node_color="skyblue", edgecolors="black",
+            node_size=node_sizes, font_size=12, font_weight="bold",
+            edge_color="gray", width=2, 
+            arrows=True, arrowsize=20
+        )
+
+        plt.title("Task System Graph", fontsize=14, fontweight="bold")
+        plt.show()
