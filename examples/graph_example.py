@@ -1,5 +1,10 @@
-from task import Task
-from task_system import TaskSystem
+import sys
+import os
+from src.task import Task
+from src.task_system import TaskSystem
+
+# Add the parent directory to the path to be able to import the classes
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Simple example of how a task system can be represented as a graph
 X = 0
