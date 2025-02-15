@@ -2,6 +2,7 @@ import threading
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 class TaskSystem:
     def __init__(self, tasks, precedence):
@@ -165,3 +166,29 @@ class TaskSystem:
 
         plt.title("Task System Graph", fontsize=14, fontweight="bold")
         plt.show()
+
+    def detTestRnd(self, num_tests=1, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
+        results = []
+        for _ in range(num_tests):
+            # Override the run method to inject random values
+            original_run_methods = {task.name: task.run for task in self.tasks.values()}
+            for task in self.tasks.values():
+                task.run = lambda: random.randint(0, 100)
+
+            # Run the task system and capture the results
+            result = self.run()
+            results.append(result)
+
+            # Restore the original run methods
+            for task in self.tasks.values():
+                task.run = original_run_methods[task.name]
+
+        # Check for determinism
+        first_result = results[0]
+        for result in results[1:]:
+            if result != first_result:
+                return False
+        return True
