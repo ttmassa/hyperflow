@@ -3,9 +3,9 @@ from src.task import Task
 def test_task_initialization():
     task = Task(name="test")
     assert task.name == "test"
-    # Not provided reads, writes, run should be None
-    assert task.reads == None
-    assert task.writes == None
+    assert task.reads == []
+    assert task.writes == []
+    # Not provided run should be None
     assert task.run == None
 
 def test_task_initialization_with_params():
