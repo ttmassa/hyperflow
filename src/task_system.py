@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 import random
+import time
 
 class TaskSystem:
     def __init__(self, tasks, precedence):
@@ -75,31 +76,41 @@ class TaskSystem:
         # Run tasks sequentially
         executed = set()
 
-        # We need to sort the tasks by the number of dependencies to ensure that all tasks are executed after their dependencies
-        # We also need to include the tasks that have no dependencies cause the sorting logic will not take them into account otherwise
-        all_tasks = set(self.tasks.keys())
-        sorted_tasks = sorted(all_tasks, key=lambda t: len(self.getDependencies(t)))
+        """
+            Because we want to allow tasks to be in any order in the self.tasks list, I need 
+            to visit all dependencies using a dfs before executing the task. This way, it 
+            ensures that all dependencies are executed before the task itself.
+        """
 
-        for task_name in sorted_tasks:
-            # Check if all dependencies of the current task have been executed
+        # DFS function to visit all dependencies before executing the task
+        def visit(task_name):
+            if task_name in executed:
+                return
+            
             for dep in self.getDependencies(task_name):
-                if dep not in executed:
-                    raise Exception(f"Task {task_name} depends on {dep} which is not executed yet")
+                visit(dep)
+            
             self.tasks[task_name].execute()
             executed.add(task_name)
+
+        for task_name in self.tasks.keys():
+            visit(task_name)
 
     def run(self):
         # Run tasks in parallel
         threads = []
         executed = set()
+        events = {task_name: threading.Event() for task_name in self.tasks.keys()}
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
-                if dep not in executed:
-                    raise Exception(f"Task {task.name} depends on {dep} which is not executed yet")
+                # Wait for the dependency to finish
+                events[dep].wait()
                 
             task.execute()
             executed.add(task.name)
+            # Signal to all tasks that depend on this task that it has been executed
+            events[task.name].set()
 
         # Start a thread for each task with the runTask function as target
         for task in self.tasks.values():
@@ -192,3 +203,26 @@ class TaskSystem:
             if result != first_result:
                 return False
         return True
+    
+    def parCost(self, runs=5):
+        seq_times = []
+        par_times = []
+
+        for _ in range(runs):
+            # Sequential 
+            start = time.time()
+            self.runSeq()
+            seq_times.append(time.time() - start)
+
+            # Parallel
+            start = time.time()
+            self.run()
+            par_times.append(time.time() - start)
+
+        # Calculate average times
+        avg_seq_time = sum(seq_times) / runs
+        avg_par_time = sum(par_times) / runs
+
+        print(f"Average Sequential Execution Time: {avg_seq_time:.5f} sec")
+        print(f"Average Parallel Execution Time: {avg_par_time:.5f} sec")
+        print(f"Speedup Factor: {avg_seq_time / avg_par_time:.2f}x")
