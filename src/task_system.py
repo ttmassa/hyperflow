@@ -109,13 +109,13 @@ class TaskSystem:
                 events[dep].wait()
 
             # Acquire locks for reads
-            for ressource in task.reads:
+            for ressource in task.reads + task.writes:
                 ressource_locks[ressource].acquire()
 
             task.execute()
 
             # Release locks for reads
-            for ressource in task.reads:
+            for ressource in task.reads + task.writes:
                 ressource_locks[ressource].release()
             executed.add(task.name)
             # Signal to all tasks that depend on this task that it has been executed
