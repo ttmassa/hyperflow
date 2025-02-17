@@ -101,13 +101,22 @@ class TaskSystem:
         threads = []
         executed = set()
         events = {task_name: threading.Event() for task_name in self.tasks.keys()}
+        ressource_locks = {ressource: threading.Lock() for task in self.tasks.values() for ressource in task.reads + task.writes}
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
                 # Wait for the dependency to finish
                 events[dep].wait()
-                
+
+            # Acquire locks for reads
+            for ressource in task.reads:
+                ressource_locks[ressource].acquire()
+
             task.execute()
+
+            # Release locks for reads
+            for ressource in task.reads:
+                ressource_locks[ressource].release()
             executed.add(task.name)
             # Signal to all tasks that depend on this task that it has been executed
             events[task.name].set()
@@ -178,30 +187,32 @@ class TaskSystem:
         plt.title("Task System Graph", fontsize=14, fontweight="bold")
         plt.show()
 
-    def detTestRnd(self, num_tests=1, seed=None):
-        if seed is not None:
-            random.seed(seed)
-
-        results = []
-        for _ in range(num_tests):
-            # Override the run method to inject random values
-            original_run_methods = {task.name: task.run for task in self.tasks.values()}
+    def detTestRnd(self, runs=5):
+        # Track results to compare between runs
+        for _ in range(runs):
+            results = []
+            alvailable_ressources = ["X", "Y", "Z"]
+            
+            # Randomize reads and writes for each task and ensure no circular dependencies
             for task in self.tasks.values():
-                task.run = lambda: random.randint(0, 100)
+                task.reads = random.sample(alvailable_ressources, random.randint(0, len(alvailable_ressources)))
+                task.writes = random.sample(alvailable_ressources, random.randint(0, len(alvailable_ressources)))
+            
+            # Run the task system multiple times and check the results
+            for _ in range(2):
+                # Run the task system in parallel 
+                self.run()
 
-            # Run the task system and capture the results
-            result = self.run()
-            results.append(result)
+                # Capture the execution result of each task
+                execution_result = {task_name: task.get_result() for task_name, task in self.tasks.items()}
+                results.append(execution_result)
 
-            # Restore the original run methods
-            for task in self.tasks.values():
-                task.run = original_run_methods[task.name]
-
-        # Check for determinism
-        first_result = results[0]
-        for result in results[1:]:
-            if result != first_result:
+            # Compare results 
+            if results[0] != results[1]:
+                print("Non-deterministic behavior detected")
                 return False
+
+        print("Deterministic behavior confirmed")
         return True
     
     def parCost(self, runs=5):
