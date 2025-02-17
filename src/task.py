@@ -19,5 +19,5 @@ class Task:
 
     # Set random values for reads and writes
     def set_random_values(self):
-        self.reads = random.randint(0, 100)
-        self.writes = random.randint(0, 100)
+        self.reads = [random.choice(['A', 'B', 'C']) for _ in range(random.randint(1, 3))]
+        self.writes = [random.choice(['A', 'B', 'C']) for _ in range(random.randint(1, 3))]
