@@ -6,13 +6,13 @@ class Task:
         self.reads = reads
         self.writes = writes
         self.run = run
-        self.output = None
 
     # Execute the test
     def execute(self):
         if self.run:
-            self.output = self.run()
+            self.run()
         else:
-            # default behavior when run is not provided
-            self.output = f"Running {self.name}"
             print(f"Running {self.name}")
+
+    def get_result(self):
+        return self.run()
