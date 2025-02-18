@@ -1,6 +1,7 @@
 import threading
 import networkx as nx
 import matplotlib.pyplot as plt
+from src.task import Task
 import numpy as np
 import random
 import time
@@ -105,20 +106,27 @@ class TaskSystem:
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
-                # Wait for the dependency to finish
-                events[dep].wait()
+                # Wait for the dependency(ies) to finish
+                events[dep].wait()  
 
-            # Acquire locks for reads
-            for ressource in task.reads + task.writes:
-                ressource_locks[ressource].acquire()
+            # Sort resources alphabetically to enforce a fixed lock order
+            resources = sorted(set(task.reads + task.writes))
 
-            task.execute()
+            # Acquire locks in the fixed order
+            acquired = []
+            try:
+                for ressource in resources:
+                    ressource_locks[ressource].acquire()
+                    acquired.append(ressource)
 
-            # Release locks for reads
-            for ressource in task.reads + task.writes:
-                ressource_locks[ressource].release()
+                task.execute()
+
+            finally:
+                # Release locks in the same order
+                for ressource in acquired:
+                    ressource_locks[ressource].release()
+
             executed.add(task.name)
-            # Signal to all tasks that depend on this task that it has been executed
             events[task.name].set()
 
         # Start a thread for each task with the runTask function as target
@@ -131,6 +139,38 @@ class TaskSystem:
         for thread in threads:
             thread.join()
 
+    def detTestRnd(self, nb_trials=100):
+        system_deterministic = True
+
+        for trial in range(nb_trials):
+            # Random seed for each trial
+            seed = random.randint(0, 10**6)
+            results = []
+
+            for _ in range(2):
+                # Set the random seed for this run
+                random.seed(seed)
+
+                # Create a new task system and run it
+                system = TaskSystem(self.tasks.values(), self.precedence)
+                system.run()
+
+                # Collect the state of each task and store it
+                state = {name: task.get_result() for name, task in system.tasks.items()}
+                print("State: ", state)
+                results.append(state)
+
+            # Check if all results are the same
+            if not all(result == results[0] for result in results):
+                print(f"Non-deterministic behavior detected in trial {trial + 1}.")
+                print(f"Results: {results}")
+                system_deterministic = False
+
+        if system_deterministic:
+            print("System is deterministic.")
+
+        return system_deterministic
+        
     """
         After some (long) research for drawing graphs with levels, I found that Graphviz is 
         one of the most popular tools for this purpose. However, using Graphviz requires 
@@ -186,34 +226,6 @@ class TaskSystem:
 
         plt.title("Task System Graph", fontsize=14, fontweight="bold")
         plt.show()
-
-    def detTestRnd(self, runs=5):
-        # Track results to compare between runs
-        for _ in range(runs):
-            results = []
-            alvailable_ressources = ["X", "Y", "Z"]
-            
-            # Randomize reads and writes for each task and ensure no circular dependencies
-            for task in self.tasks.values():
-                task.reads = random.sample(alvailable_ressources, random.randint(0, len(alvailable_ressources)))
-                task.writes = random.sample(alvailable_ressources, random.randint(0, len(alvailable_ressources)))
-            
-            # Run the task system multiple times and check the results
-            for _ in range(2):
-                # Run the task system in parallel 
-                self.run()
-
-                # Capture the execution result of each task
-                execution_result = {task_name: task.get_result() for task_name, task in self.tasks.items()}
-                results.append(execution_result)
-
-            # Compare results 
-            if results[0] != results[1]:
-                print("Non-deterministic behavior detected")
-                return False
-
-        print("Deterministic behavior confirmed")
-        return True
     
     def parCost(self, runs=5):
         seq_times = []
