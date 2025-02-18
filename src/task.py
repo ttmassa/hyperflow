@@ -15,4 +15,7 @@ class Task:
             print(f"Running {self.name}")
 
     def get_result(self):
-        return self.run()
+        if self.run:
+            return self.run()
+        else:
+            return self.name
