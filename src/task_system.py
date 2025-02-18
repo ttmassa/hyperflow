@@ -151,13 +151,15 @@ class TaskSystem:
                 # Set the random seed for this run
                 random.seed(seed)
 
-                # Create a new task system and run it
-                system = TaskSystem(self.tasks.values(), self.precedence)
-                system.run()
+                # Randomize the initial state of the tasks
+                for task in self.tasks.values():
+                    task.randomize_result()
+
+                # Run the current task system
+                self.run()
 
                 # Collect the state of each task and store it
-                state = {name: task.get_result() for name, task in system.tasks.items()}
-                print("State: ", state)
+                state = {name: task.get_result() for name, task in self.tasks.items()}
                 results.append(state)
 
             # Check if all results are the same

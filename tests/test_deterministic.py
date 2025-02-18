@@ -9,7 +9,7 @@ shared_state = {"X": 0}
 def deterministic_task_system():
     # Create a deterministic task system
     def fixed_task():
-        return 42  
+        return {"value": 42}
 
     tasks = [
         Task("T1", writes=["X"], run=fixed_task),
@@ -26,8 +26,8 @@ def deterministic_task_system():
 def non_deterministic_task_system():
     # Create a non-deterministic task system
     def random_task():
-        shared_state["X"] += random.randint(1, 100)  
-        return shared_state["X"]  
+        shared_state["X"] += random.randint(1, 100)
+        return {"value": shared_state["X"]}
 
     # Both tasks write to X concurrently to create non-determinism
     tasks = [
@@ -41,9 +41,9 @@ def non_deterministic_task_system():
     return TaskSystem(tasks, precedence)
 
 def test_deterministic():
-    system = deterministic_task_system()  
-    assert system.detTestRnd(nb_trials=5) 
+    system = deterministic_task_system()
+    assert system.detTestRnd(nb_trials=5)
 
 def test_non_deterministic():
-    system = non_deterministic_task_system()  
+    system = non_deterministic_task_system()
     assert not system.detTestRnd(nb_trials=5)

@@ -17,3 +17,6 @@ class Task:
 
     def get_result(self):
         return self.result
+    
+    def randomize_result(self):
+        self.result = random.randint(1, 100)
