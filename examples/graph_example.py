@@ -34,9 +34,12 @@ tFinal = Task(name="TFinal", reads=["Z"], run=lambda: print(f"Final result: Z = 
 
 task_system = TaskSystem([t1, t2, t3, t4, tSomme, tFinal], {"T2": ["T1"], "T4": ["T3"], "TSomme": ["T2", "T4"], "TFinal": ["TSomme"]})
 
-print("Executing Task System...")
-task_system.run()
-print("Drawing Dependency Graph...")
-task_system.draw()
+def generate_graph():
+    print("Executing Task System...")
+    task_system.run()
+    print("Drawing Dependency Graph...")
+    task_system.draw()
+    print("Draw function executed successfully.")
 
-print("Draw function executed successfully.")
+if __name__ == "__main__":
+    generate_graph()
