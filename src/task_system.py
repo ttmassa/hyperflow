@@ -214,7 +214,7 @@ class TaskSystem:
                 pos[task] = (x_positions[i], -level)  # Y is inverted for top-down layout
 
         # Calculate node sizes based on name length
-        node_sizes = [3000 + 100 * len(task_name) for task_name in G.nodes()]
+        node_sizes = [2000 + 100 * len(task_name) for task_name in G.nodes()]
 
         # Draw the graph
         plt.figure(figsize=(8, 6))
