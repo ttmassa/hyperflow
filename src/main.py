@@ -17,7 +17,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         
         To get started, you can type 'main.py --test' to select a premade task system and test it.
     
-        Type 'main.py --help' to see the available options.
+        Type 'python main.py --help' to see the available options.
         For more information, visit the documentation at https://github.com/ttmassa/hyperflow
         """)
         print(welcome_message)
@@ -26,7 +26,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         help_message = textwrap.dedent("""
         HyperFlow 1.0
         Usage:
-            main.py [options]
+            python main.py [options]
 
         Options:
             -v, --version    Display your current Hyperflow version
