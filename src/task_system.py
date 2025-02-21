@@ -112,21 +112,21 @@ class TaskSystem:
             # Sort resources alphabetically to enforce a fixed lock order
             resources = sorted(set(task.reads + task.writes))
 
-            # Acquire locks in the fixed order
+            # Acquire locks for all resources
             acquired = []
             try:
                 for ressource in resources:
                     ressource_locks[ressource].acquire()
                     acquired.append(ressource)
-
                 task.execute()
 
             finally:
-                # Release locks in the same order
+                # Release all acquired lockss
                 for ressource in acquired:
                     ressource_locks[ressource].release()
 
             executed.add(task.name)
+            print(f"Task executed: {executed}")
             events[task.name].set()
 
         # Start a thread for each task with the runTask function as target
@@ -192,6 +192,9 @@ class TaskSystem:
         for task_name, deps in self.precedence.items():
             for dep in deps:
                 G.add_edge(dep, task_name)
+
+        # Perform transitive reduction to remove redundant edges
+        G = nx.transitive_reduction(G)
 
         # Calculate task levels
         levels = {}
