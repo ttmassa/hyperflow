@@ -82,6 +82,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
             while True:
                 option = input("Select an option: ")
                 if option == 'graph':
+                    print("Tasks: ", ", ".join(task.name for task in task_system.tasks.values()))
+                    print("Precedence: ", task_system.precedence)
                     print("Drawing dependency graph...")
                     task_system.draw()
                 elif option == 'det':
