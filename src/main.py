@@ -73,6 +73,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         1. Display the graph : 'graph'
         2. Test if the task system is deterministic : 'det'
         3. Compare sequential and parallel execution times : 'time'
+        4. Run the task system in parallel : 'run'
                                           
         Type 'exit' to exit the program.
         """)
@@ -91,6 +92,9 @@ class CustomArgumentParser(argparse.ArgumentParser):
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()
+                elif option == 'run':
+                    print("Running the task system...")
+                    task_system.run()
                 elif option == 'exit':
                     break
                 else:

@@ -103,6 +103,7 @@ class TaskSystem:
         executed = set()
         events = {task_name: threading.Event() for task_name in self.tasks.keys()}
         ressource_locks = {ressource: threading.Lock() for task in self.tasks.values() for ressource in task.reads + task.writes}
+        execution_log = []
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
@@ -118,15 +119,19 @@ class TaskSystem:
                 for ressource in resources:
                     ressource_locks[ressource].acquire()
                     acquired.append(ressource)
+                
+                start_time = time.time()
+                execution_log.append((task.name, start_time, 'start'))
                 task.execute()
+                end_time = time.time()
+                execution_log.append((task.name, end_time, 'end'))
 
             finally:
-                # Release all acquired lockss
+                # Release all acquired locks
                 for ressource in acquired:
                     ressource_locks[ressource].release()
 
             executed.add(task.name)
-            print(f"Task executed: {executed}")
             events[task.name].set()
 
         # Start a thread for each task with the runTask function as target
@@ -138,6 +143,17 @@ class TaskSystem:
         # Wait for all threads to finish
         for thread in threads:
             thread.join()
+
+        # Print execution order and detect parallel execution
+        execution_log.sort(key=lambda x: x[1])
+        for i, log in enumerate(execution_log):
+            task_name, timestamp, event = log
+            if event == 'start':
+                print(f"Task {task_name} started at {timestamp:.5f}")
+            elif event == 'end':
+                print(f"Task {task_name} finished at {timestamp:.5f}")
+                if i > 0 and execution_log[i-1][2] == 'start' and execution_log[i-1][1] <= timestamp:
+                    print(f"Task {task_name} executed in parallel with {execution_log[i-1][0]}")
 
     def detTestRnd(self, nb_trials=100):
         system_deterministic = True
