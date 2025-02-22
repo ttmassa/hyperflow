@@ -18,8 +18,11 @@ def random_task_system():
     nbr_tasks = random.randint(8, 15)
 
     tasks = []
+    domain_choice = ["X", "Y", "Z"]
     for i in range(nbr_tasks):
-        tasks.append(Task(name=f"T{i}", run=random_result))
+        reads = random.choices(domain_choice)
+        writes = random.choices(domain_choice)
+        tasks.append(Task(name=f"T{i}", reads=reads, writes=writes, run=random_result))
 
     precedence = {}
 
