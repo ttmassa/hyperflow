@@ -188,6 +188,31 @@ class TaskSystem:
             print("System is deterministic.")
 
         return system_deterministic
+    
+    """
+        The Bernstein condition states that a task system is deterministic if and only if
+        every pair of tasks is non-conflicting. Two tasks are non-conflicting if they meet
+        one of the following conditions:
+        - T1 -> T2 or T2 -> T1 
+        - T1.reads ∩ T2.writes = ∅ and T1.writes ∩ T2.reads = ∅ and T1.writes ∩ T2.writes = ∅
+    """
+    def detTestBernstein(self):
+        # Check if the task system is deterministic using the Bernstein condition
+        for task1 in self.tasks.values():
+            for task2 in self.tasks.values():
+                if task1 == task2:
+                    continue
+
+                # Check for conflicts
+                if task1.name in self.getDependencies(task2.name) or task2.name in self.getDependencies(task1.name):
+                    continue
+
+                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+                    print(f"Tasks {task1.name} and {task2.name} are conflicting.")
+                    return False
+                
+        print("System is deterministic.")
+        return True
         
     """
         After some (long) research for drawing graphs with levels, I found that Graphviz is 
