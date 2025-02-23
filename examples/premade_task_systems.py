@@ -15,13 +15,13 @@ def random_task_system():
         return {"value": random.randint(1, 100)}
     
     # Generate a random number of tasks
-    nbr_tasks = random.randint(8, 15)
+    nbr_tasks = random.randint(5, 10)
 
     tasks = []
     domain_choice = ["X", "Y", "Z"]
     for i in range(nbr_tasks):
-        reads = random.choices(domain_choice)
-        writes = random.choices(domain_choice)
+        reads = random.choices(domain_choice, k=random.randint(0, 1))
+        writes = random.choices(domain_choice, k=random.randint(0, 1))
         tasks.append(Task(name=f"T{i}", reads=reads, writes=writes, run=random_result))
 
     precedence = {}

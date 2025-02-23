@@ -98,62 +98,91 @@ class TaskSystem:
             visit(task_name)
 
     def run(self):
-        # Run tasks in parallel
-        threads = []
-        executed = set()
-        events = {task_name: threading.Event() for task_name in self.tasks.keys()}
-        ressource_locks = {ressource: threading.Lock() for task in self.tasks.values() for ressource in task.reads + task.writes}
-        execution_log = []
+        # Run tasks with maximum parallelism using the matrix
+        task_names = list(self.tasks.keys())
+        n = len(task_names)
+        matrix = self.createMatrix()
+
+        events = {task_name: threading.Event() for task_name in task_names}
+        resource_locks = {resource: threading.Lock() for task in self.tasks.values() for resource in task.reads + task.writes}
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
-                # Wait for the dependency(ies) to finish
-                events[dep].wait()  
+                events[dep].wait()  # Wait for dependencies to complete
 
-            # Sort resources alphabetically to enforce a fixed lock order
             resources = sorted(set(task.reads + task.writes))
-
-            # Acquire locks for all resources
             acquired = []
             try:
-                for ressource in resources:
-                    ressource_locks[ressource].acquire()
-                    acquired.append(ressource)
-                
-                start_time = time.time()
-                execution_log.append((task.name, start_time, 'start'))
+                for resource in resources:
+                    resource_locks[resource].acquire()
+                    acquired.append(resource)
+
                 task.execute()
-                end_time = time.time()
-                execution_log.append((task.name, end_time, 'end'))
-
             finally:
-                # Release all acquired locks
-                for ressource in acquired:
-                    ressource_locks[ressource].release()
+                for resource in acquired:
+                    resource_locks[resource].release()
 
-            executed.add(task.name)
             events[task.name].set()
 
-        # Start a thread for each task with the runTask function as target
-        for task in self.tasks.values():
-            thread = threading.Thread(target=runTask, args=(task,))
-            threads.append(thread)
-            thread.start()
+        # Determine task execution order based on max parallelism matrix
+        executed = set()
+        while len(executed) < n:
+            # Find tasks with no dependencies remaining
+            runnable_tasks = []
+            for i in range(n):
+                task_name = task_names[i]
+                if task_name in executed:
+                    continue
+                if all(matrix[j, i] == 0 or task_names[j] in executed for j in range(n)):
+                    runnable_tasks.append(self.tasks[task_name])
 
-        # Wait for all threads to finish
-        for thread in threads:
-            thread.join()
+            # Execute all runnable tasks in parallel
+            threads = []
+            for task in runnable_tasks:
+                t = threading.Thread(target=runTask, args=(task,))
+                t.start()
+                threads.append(t)
+                executed.add(task.name)
 
-        # Print execution order and detect parallel execution
-        execution_log.sort(key=lambda x: x[1])
-        for i, log in enumerate(execution_log):
-            task_name, timestamp, event = log
-            if event == 'start':
-                print(f"Task {task_name} started at {timestamp:.5f}")
-            elif event == 'end':
-                print(f"Task {task_name} finished at {timestamp:.5f}")
-                if i > 0 and execution_log[i-1][2] == 'start' and execution_log[i-1][1] <= timestamp:
-                    print(f"Task {task_name} executed in parallel with {execution_log[i-1][0]}")
+            for t in threads:
+                t.join()
+
+    def areTasksConflicting(self, task1, task2):
+        # Check if two tasks are conflicting
+        if task1.name in self.getDependencies(task2.name) or task2.name in self.getDependencies(task1.name):
+            return True
+        
+        if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+            return True
+        
+        return False
+    
+    def createMatrix(self):
+        # Create max parallelism matrix
+        task_names = list(self.tasks.keys())
+        n = len(task_names)
+
+        # Create the adjency matrix
+        adj_matrix = np.zeros((n, n), dtype=int)
+        for i, task_name in enumerate(task_names):
+            for dep in self.getDependencies(task_name):
+                j = task_names.index(dep)
+                if adj_matrix[j, i] == 0:
+                    adj_matrix[j, i] = 1
+
+        # Create the max parallelism matrix by removing useless edges
+        max_parallelism_matrix = adj_matrix.copy()
+        for i in range(n):
+            for j in range(n):
+                if i == j or adj_matrix[i, j] == 0:
+                    continue
+
+                task1 = self.tasks[task_names[i]]
+                task2 = self.tasks[task_names[j]]
+                if not self.areTasksConflicting(task1, task2):
+                    max_parallelism_matrix[i, j] = 0
+
+        return max_parallelism_matrix
 
     def detTestRnd(self, nb_trials=100):
         system_deterministic = True
@@ -204,11 +233,8 @@ class TaskSystem:
                     continue
 
                 # Check for conflicts
-                if task1.name in self.getDependencies(task2.name) or task2.name in self.getDependencies(task1.name):
-                    continue
-
-                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
-                    print(f"Tasks {task1.name} and {task2.name} are conflicting.")
+                if self.areTasksConflicting(task1, task2):
+                    print(f"Non-deterministic behavior detected between tasks '{task1.name}' and '{task2.name}'.")
                     return False
                 
         print("System is deterministic.")
@@ -222,22 +248,28 @@ class TaskSystem:
         decided to manually implement the level logic using the networkx and matplotlib libraries.
     """
     def draw(self):
+        # Get max parallelism matrix
+        matrix = self.createMatrix()
+        task_names = list(self.tasks.keys())
+        n = len(task_names)
+
         # Create directed graph
         G = nx.DiGraph()
 
-        # Add nodes 
-        for task_name in self.tasks.keys():
+        # Add nodes
+        for task_name in task_names:
             G.add_node(task_name)
 
-        # Add edges 
-        for task_name, deps in self.precedence.items():
-            for dep in deps:
-                G.add_edge(dep, task_name)
+        # Add edges based on max parallelism matrix
+        for i in range(n):
+            for j in range(n):
+                if matrix[i, j] == 1:  # If there's a dependency
+                    G.add_edge(task_names[i], task_names[j])
 
-        # Perform transitive reduction to remove redundant edges
+        # Remove useless edges
         G = nx.transitive_reduction(G)
 
-        # Calculate task levels
+        # Compute task levels for visualization
         levels = {}
         for task_name in nx.topological_sort(G):
             level = max([levels.get(dep, 0) for dep in G.predecessors(task_name)], default=-1) + 1
@@ -263,14 +295,14 @@ class TaskSystem:
         # Draw the graph
         plt.figure(figsize=(8, 6))
         nx.draw(
-            G, pos, with_labels=True, 
+            G, pos, with_labels=True,
             node_color="skyblue", edgecolors="black",
             node_size=node_sizes, font_size=12, font_weight="bold",
-            edge_color="gray", width=2, 
+            edge_color="gray", width=2,
             arrows=True, arrowsize=20
         )
 
-        plt.title("Task System Graph", fontsize=14, fontweight="bold")
+        plt.title("Max Parallelism Graph", fontsize=14, fontweight="bold")
         plt.show()
     
     def parCost(self, runs=5):

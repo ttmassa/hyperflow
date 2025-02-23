@@ -73,7 +73,9 @@ class CustomArgumentParser(argparse.ArgumentParser):
         1. Display the graph : 'graph'
         2. Test if the task system is deterministic : 'det'
         3. Compare sequential and parallel execution times : 'time'
-        4. Run the task system in parallel : 'run'
+        4. Create the matrix : 'matrix'
+        5. Run the task system sequentially : 'seq'
+        6. Run the task system in parallel : 'run'
                                           
         Type 'exit' to exit the program.
         """)
@@ -85,6 +87,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
                 if option == 'graph':
                     for task in task_system.tasks.values():
                         print(task.name, task.reads, task.writes)
+                    print("Precedence: ", task_system.precedence)
                     print("Drawing dependency graph...")
                     task_system.draw()
                 elif option == 'det':
@@ -92,6 +95,11 @@ class CustomArgumentParser(argparse.ArgumentParser):
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()
+                elif option == 'matrix':
+                    task_system.createMatrix()
+                elif option == 'seq':
+                    print("Running the task system sequentially...")
+                    task_system.runSeq()
                 elif option == 'run':
                     print("Running the task system...")
                     task_system.run()
