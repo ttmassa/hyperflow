@@ -7,7 +7,7 @@ import textwrap
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from examples.graph_example import generate_graph
-from examples.premade_task_systems import random_task_system, simple_task_system, fibonacci_task_system, factorial_task_system
+from examples.premade_task_systems import simple_task_system, fibonacci_task_system, matrix_multiplication_task_system
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def print_welcome(self):
@@ -45,10 +45,9 @@ class CustomArgumentParser(argparse.ArgumentParser):
     def test_message(self):
         test_message = textwrap.dedent("""
         To get started, you can select one of these premade task systems:
-        1. Random task system
-        2. Simple task system
-        3. Fibonacci task system
-        4. Factorial task system
+        1. Simple task system
+        2. Fibonacci task system
+        3. Matrix multiplication task system
         """)
         print(test_message)
 
@@ -56,17 +55,14 @@ class CustomArgumentParser(argparse.ArgumentParser):
             choice = input("Select a task system: ")
             task_system = None
             if choice == '1':
-                print("Random task system selected")
-                task_system = random_task_system()
-            elif choice == '2':
                 print("Simple task system selected")
                 task_system = simple_task_system()
-            elif choice == '3':
+            elif choice == '2':
                 print("Fibonacci task system selected")
                 task_system = fibonacci_task_system()
-            elif choice == '4':
-                print("Factorial task system selected")
-                task_system = factorial_task_system()
+            elif choice == '3':
+                print("Matrix multiplication task system")
+                task_system = matrix_multiplication_task_system()
             else:
                 print("Invalid choice. Please select the number of the task system you want to test.")
         except KeyboardInterrupt:
@@ -76,7 +72,6 @@ class CustomArgumentParser(argparse.ArgumentParser):
         Here's the list of available options:
         1. Display the graph : 'graph'
         2. Test if the task system is deterministic : 'det'
-        3. Test if the task system is deterministic using Bernstein's conditions : 'ber'
         3. Compare sequential and parallel execution times : 'time'
         4. Create the matrix : 'matrix'
         5. Run the task system sequentially : 'seq'
@@ -98,8 +93,6 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     task_system.draw()
                 elif option == 'det':
                     task_system.detTestRnd()
-                elif option == 'ber':
-                    task_system.detTestBernstein()
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()

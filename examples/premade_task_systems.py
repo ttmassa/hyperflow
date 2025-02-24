@@ -8,31 +8,7 @@ from src.task import Task
 from src.task_system import TaskSystem
 import random
 import time
-
-def random_task_system():
-    def random_result():
-        time.sleep(0.01)
-        return {"value": random.randint(1, 100)}
-    
-    # Generate a random number of tasks
-    nbr_tasks = random.randint(5, 10)
-
-    tasks = []
-    domain_choice = ["X", "Y", "Z"]
-    for i in range(nbr_tasks):
-        reads = random.choices(domain_choice, k=random.randint(0, 1))
-        writes = random.choices(domain_choice, k=random.randint(0, 1))
-        tasks.append(Task(name=f"T{i}", reads=reads, writes=writes, run=random_result))
-
-    precedence = {}
-
-    for i in range(nbr_tasks):
-        # Randomly select the number of tasks that the current task will depend on
-        nbr_dependencies = random.randint(0, i)
-        dependencies = random.sample(range(i), nbr_dependencies)
-        precedence[f"T{i}"] = [f"T{dep}" for dep in dependencies]
-
-    return TaskSystem(tasks, precedence)
+import numpy as np
 
 def simple_task_system():
     def simple_result():
@@ -71,15 +47,26 @@ def fibonacci_task_system():
 
     return TaskSystem(tasks, precedence)
 
-def factorial_task_system():
-    def factorial(n):
-        time.sleep(0.001)
-        if n == 0:
-            return 1
-        else:
-            return n * factorial(n-1)
+def matrix_multiplication_task_system():
+    def multiply_matrices(A, B):
+        time.sleep(0.01)
+        return np.dot(A, B)
 
-    tasks = [Task(name=f"T{i}", run=lambda i=i: factorial(i)) for i in range(8)]
-    precedence = {f"T{i}": [f"T{i-1}"] for i in range(1, 8)}
+    A = np.random.rand(2, 2)
+    B = np.random.rand(2, 2)
+    C = np.random.rand(2, 2)
+
+    tasks = [
+        Task(name="T1", writes=["A"], run=lambda: A),
+        Task(name="T2", writes=["B"], run=lambda: B),
+        Task(name="T3", reads=["A", "B"], writes=["C"], run=lambda: multiply_matrices(A, B)),
+        Task(name="T4", reads=["C"], writes=["D"], run=lambda: multiply_matrices(C, A))
+    ]
+    precedence = {
+        "T1": [],
+        "T2": [],
+        "T3": ["T1", "T2"],
+        "T4": ["T3"]
+    }
 
     return TaskSystem(tasks, precedence)
