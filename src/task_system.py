@@ -1,7 +1,6 @@
 import threading
 import networkx as nx
 import matplotlib.pyplot as plt
-from src.task import Task
 import numpy as np
 import random
 import time
@@ -26,6 +25,9 @@ class TaskSystem:
 
         # Check for missing dependencies
         self.checkMissingDependencies()
+
+        # Check if the task system is deterministic using the Bernstein condition
+        self.checkDetBernstein()
 
     # The Task constructor already ensures that a name is provided but why not check it again 
     def checkEmptyTaskNames(self):
@@ -68,7 +70,58 @@ class TaskSystem:
             for dep in deps:
                 if dep not in self.tasks:
                     raise ValueError(f"Missing dependency detected: Task '{task_name}' depends on '{dep}' which does not exist.")
+
+    """
+        The Bernstein condition states that a task system is deterministic if and only if
+        every pair of tasks is non-conflicting. Two tasks are non-conflicting if they meet
+        one of the following conditions:
+        - T1 -> T2 or T2 -> T1 
+        - T1.reads ∩ T2.writes = ∅ and T1.writes ∩ T2.reads = ∅ and T1.writes ∩ T2.writes = ∅
+    """
+    def checkDetBernstein(self):
+        # Check if the task system is deterministic using the Bernstein condition
+        for task1 in self.tasks.values():
+            for task2 in self.tasks.values():
+                if task1 == task2:
+                    continue
+
+                # Check for conflicts
+                if self.areTasksConflicting(task1, task2):
+                    raise Exception("Non-deterministic behavior detected: Tasks '{0}' and '{1}' are conflicting.".format(task1.name, task2.name))
                 
+    def createTransitiveClosureMatrix(self):
+        task_names = list(self.tasks.keys())
+        n = len(task_names)
+
+        # Initialize the transitive closure matrix
+        transitive_closure = np.zeros((n, n), dtype=int)
+        for i, task_name in enumerate(task_names):
+            for dep in self.getDependencies(task_name):
+                j = task_names.index(dep)
+                transitive_closure[j, i] = 1
+
+        # Compute the transitive closure using the Floyd-Warshall algorithm
+        for k in range(n):
+            for i in range(n):
+                for j in range(n):
+                    transitive_closure[i, j] = transitive_closure[i, j] or (transitive_closure[i, k] and transitive_closure[k, j])
+
+        return transitive_closure
+                
+    def areTasksConflicting(self, task1, task2):
+        task_names = list(self.tasks.keys())
+        transitive_closure = self.createTransitiveClosureMatrix()
+
+        # Check if there's a path between the two tasks
+        if transitive_closure[task_names.index(task1.name), task_names.index(task2.name)] == 1 or transitive_closure[task_names.index(task2.name), task_names.index(task1.name)] == 1:
+            return False
+            
+        # Bernstein condition
+        if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+            return True
+        
+        return False
+    
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
         return self.precedence.get(task_name, [])
@@ -147,43 +200,30 @@ class TaskSystem:
             for t in threads:
                 t.join()
 
-    def areTasksConflicting(self, task1, task2):
-        # Check if two tasks are conflicting
-        if task1.name in self.getDependencies(task2.name) or task2.name in self.getDependencies(task1.name):
-            return True
-        
-        if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
-            return True
-        
-        return False
     
     def createMatrix(self):
         # Create max parallelism matrix
         task_names = list(self.tasks.keys())
         n = len(task_names)
+        transitive_closure = self.createTransitiveClosureMatrix()
 
-        # Create the adjency matrix
-        adj_matrix = np.zeros((n, n), dtype=int)
-        for i, task_name in enumerate(task_names):
-            for dep in self.getDependencies(task_name):
-                j = task_names.index(dep)
-                if adj_matrix[j, i] == 0:
-                    adj_matrix[j, i] = 1
-
-        # Create the max parallelism matrix by removing useless edges
-        max_parallelism_matrix = adj_matrix.copy()
+        # Create the max parallelism matrix by removing useless edges 
+        max_parallelism_matrix = transitive_closure.copy()
         for i in range(n):
             for j in range(n):
-                if i == j or adj_matrix[i, j] == 0:
+                if i == j or transitive_closure[i, j] == 0:
                     continue
 
                 task1 = self.tasks[task_names[i]]
                 task2 = self.tasks[task_names[j]]
-                if not self.areTasksConflicting(task1, task2):
+                # If two tasks are non-conflicting, they can run in parallel
+                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+                    max_parallelism_matrix[i, j] = 1
+                else:
                     max_parallelism_matrix[i, j] = 0
 
         return max_parallelism_matrix
-
+    
     def detTestRnd(self, nb_trials=100):
         system_deterministic = True
 
@@ -218,27 +258,6 @@ class TaskSystem:
 
         return system_deterministic
     
-    """
-        The Bernstein condition states that a task system is deterministic if and only if
-        every pair of tasks is non-conflicting. Two tasks are non-conflicting if they meet
-        one of the following conditions:
-        - T1 -> T2 or T2 -> T1 
-        - T1.reads ∩ T2.writes = ∅ and T1.writes ∩ T2.reads = ∅ and T1.writes ∩ T2.writes = ∅
-    """
-    def detTestBernstein(self):
-        # Check if the task system is deterministic using the Bernstein condition
-        for task1 in self.tasks.values():
-            for task2 in self.tasks.values():
-                if task1 == task2:
-                    continue
-
-                # Check for conflicts
-                if self.areTasksConflicting(task1, task2):
-                    print(f"Non-deterministic behavior detected between tasks '{task1.name}' and '{task2.name}'.")
-                    return False
-                
-        print("System is deterministic.")
-        return True
         
     """
         After some (long) research for drawing graphs with levels, I found that Graphviz is 
@@ -263,7 +282,7 @@ class TaskSystem:
         # Add edges based on max parallelism matrix
         for i in range(n):
             for j in range(n):
-                if matrix[i, j] == 1:  # If there's a dependency
+                if matrix[i, j] == 1:  
                     G.add_edge(task_names[i], task_names[j])
 
         # Remove useless edges
