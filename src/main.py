@@ -76,10 +76,12 @@ class CustomArgumentParser(argparse.ArgumentParser):
         Here's the list of available options:
         1. Display the graph : 'graph'
         2. Test if the task system is deterministic : 'det'
+        3. Test if the task system is deterministic using Bernstein's conditions : 'ber'
         3. Compare sequential and parallel execution times : 'time'
         4. Create the matrix : 'matrix'
         5. Run the task system sequentially : 'seq'
         6. Run the task system in parallel : 'run'
+        7. Test another premade task system : 'new'
                                           
         Type 'exit' to exit the program.
         """)
@@ -109,6 +111,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
                 elif option == 'run':
                     print("Running the task system...")
                     task_system.run()
+                elif option == 'new':
+                    self.test_message()
                 elif option == 'exit':
                     break
                 else:
