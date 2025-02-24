@@ -13,6 +13,8 @@ HyperFlow is a Python library that provides an easy solution to automize the max
 
 ## Key Features 
 
+- **Maximum Parallelism Execution**: Achieve the maximum level of parallelism by automatically determining the optimal execution order of tasks based on r/w domains. This ensures that tasks are executed concurrently whenever possible, maximizing the utilization of available resources.
+
 - **Sequential and Parallel Execution**: Execute tasks sequentially or in parallel. The library ensures that tasks are executed in the correct order based on their dependencies.
 
 - **Graph Visualization**: Visualize task systems as dependency graphs using the `draw` method. This helps in understanding the structure and dependencies of the task system.
