@@ -7,7 +7,7 @@ import textwrap
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from examples.graph_example import generate_graph
-from examples.premade_task_systems import random_task_system, fibonacci_task_system, factorial_task_system
+from examples.premade_task_systems import random_task_system, simple_task_system, fibonacci_task_system, factorial_task_system
 
 class CustomArgumentParser(argparse.ArgumentParser):
     def print_welcome(self):
@@ -46,8 +46,9 @@ class CustomArgumentParser(argparse.ArgumentParser):
         test_message = textwrap.dedent("""
         To get started, you can select one of these premade task systems:
         1. Random task system
-        2. Fibonacci task system
-        3. Factorial task system
+        2. Simple task system
+        3. Fibonacci task system
+        4. Factorial task system
         """)
         print(test_message)
 
@@ -58,10 +59,13 @@ class CustomArgumentParser(argparse.ArgumentParser):
                 print("Random task system selected")
                 task_system = random_task_system()
             elif choice == '2':
+                print("Simple task system selected")
+                task_system = simple_task_system()
+            elif choice == '3':
                 print("Fibonacci task system selected")
                 task_system = fibonacci_task_system()
-            elif choice == '3':
-                print("Matrix multiplication task system selected")
+            elif choice == '4':
+                print("Factorial task system selected")
                 task_system = factorial_task_system()
             else:
                 print("Invalid choice. Please select the number of the task system you want to test.")
@@ -92,6 +96,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     task_system.draw()
                 elif option == 'det':
                     task_system.detTestRnd()
+                elif option == 'ber':
+                    task_system.detTestBernstein()
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()

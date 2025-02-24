@@ -34,6 +34,30 @@ def random_task_system():
 
     return TaskSystem(tasks, precedence)
 
+def simple_task_system():
+    def simple_result():
+        time.sleep(0.01)
+        return {"value": random.randint(1, 100)}
+
+    tasks = [
+        Task(name="T1", reads=["A", "F"], writes=["B"], run=simple_result),
+        Task(name="T2", reads=["F"], writes=["D"], run=simple_result),
+        Task(name="T3", reads=["B", "C"], writes=[], run=simple_result),
+        Task(name="T4", reads=["B", "D"], writes=["A", "F"], run=simple_result),
+        Task(name="T5", reads=["E"], writes=["C", "E"], run=simple_result),
+        Task(name="T6", reads=["A"], writes=["B"], run=simple_result)
+    ]
+    precedence = {
+        "T1": [],
+        "T2": ["T1"],
+        "T3": ["T1"],
+        "T4": ["T2", "T3"],
+        "T5": ["T3"],
+        "T6": ["T4", "T5"]
+    }
+
+    return TaskSystem(tasks, precedence)
+
 def fibonacci_task_system():
     def fibonacci(n):
         time.sleep(0.001)
