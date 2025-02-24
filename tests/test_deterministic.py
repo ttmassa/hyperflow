@@ -32,7 +32,7 @@ def non_deterministic_task_system():
     # Both tasks write to X concurrently to create non-determinism
     tasks = [
         Task("T1", writes=["X"], run=random_task),
-        Task("T2", writes=["X"], run=random_task),  
+        Task("T2", run=random_task),  
     ]
     
     # No precedence constraints to allow for non-determinism
