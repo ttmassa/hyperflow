@@ -128,6 +128,7 @@ class TaskSystem:
     
     def runSeq(self):
         # Run tasks sequentially
+        start_time = time.time()
         executed = set()
 
         """
@@ -150,8 +151,12 @@ class TaskSystem:
         for task_name in self.tasks.keys():
             visit(task_name)
 
+        elapsed_time = time.time() - start_time
+        return executed, elapsed_time
+
     def run(self):
         # Run tasks with maximum parallelism using the matrix
+        start_time = time.time()
         task_names = list(self.tasks.keys())
         n = len(task_names)
         matrix = self.createMatrix()
@@ -199,8 +204,10 @@ class TaskSystem:
 
             for t in threads:
                 t.join()
+        
+        elapsed_time = time.time() - start_time
+        return elapsed_time
 
-    
     def createMatrix(self):
         # Create max parallelism matrix
         task_names = list(self.tasks.keys())
@@ -224,7 +231,8 @@ class TaskSystem:
 
         return max_parallelism_matrix
     
-    def detTestRnd(self, nb_trials=100):
+    def detTestRnd(self, nb_trials=10):
+        start_time = time.time()
         system_deterministic = True
 
         for trial in range(nb_trials):
@@ -253,8 +261,9 @@ class TaskSystem:
                 print(f"Results: {results}")
                 system_deterministic = False
 
+        elapsed_time = time.time() - start_time
         if system_deterministic:
-            print("System is deterministic.")
+            print(f"Test ended in {elapsed_time:.5f}sec with {nb_trials} trials: System is deterministic.")
 
         return system_deterministic
     

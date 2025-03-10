@@ -15,7 +15,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
         Welcome to HyperFlow! 
         HyperFlow is a Python library created to help you manage, visualize and test your task systems. The goal is to maximise the parallelism of your tasks and improve the performance of your system.
         
-        To get started, you can type 'main.py --test' to select a premade task system and test it.
+        To get started, you can type 'python main.py --test' to select a premade task system and test it.
     
         Type 'python main.py --help' to see the available options.
         For more information, visit the documentation at https://github.com/ttmassa/hyperflow
@@ -35,8 +35,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
             -h, --help       Display this help message
 
         Example:
-            main.py --v
-            main.py --graph
+            python main.py --v
+            python main.py --graph
 
         For more information, visit the documentation at https://github.com/ttmassa/hyperflow
         """)
@@ -52,19 +52,20 @@ class CustomArgumentParser(argparse.ArgumentParser):
         print(test_message)
 
         try: 
-            choice = input("Select a task system: ")
             task_system = None
-            if choice == '1':
-                print("Simple task system selected")
-                task_system = simple_task_system()
-            elif choice == '2':
-                print("Fibonacci task system selected")
-                task_system = fibonacci_task_system()
-            elif choice == '3':
-                print("Matrix multiplication task system")
-                task_system = matrix_multiplication_task_system()
-            else:
-                print("Invalid choice. Please select the number of the task system you want to test.")
+            while not task_system:
+                choice = input("Select a task system: ")
+                if choice == '1':
+                    print("Simple task system selected")
+                    task_system = simple_task_system()
+                elif choice == '2':
+                    print("Fibonacci task system selected")
+                    task_system = fibonacci_task_system()
+                elif choice == '3':
+                    print("Matrix multiplication task system")
+                    task_system = matrix_multiplication_task_system()
+                else:
+                    print("Invalid choice. Please select the number of the task system you want to test.")
         except KeyboardInterrupt:
             sys.exit()
 
@@ -78,12 +79,12 @@ class CustomArgumentParser(argparse.ArgumentParser):
         6. Run the task system in parallel : 'run'
         7. Test another premade task system : 'new'
                                           
-        Type 'exit' to exit the program.
+        Type 'exit' or 'quit' to exit the program.
         """)
         print(options_message)
 
         try:
-            while True:
+            while task_system:
                 option = input("Select an option: ")
                 if option == 'graph':
                     for task in task_system.tasks.values():
@@ -92,21 +93,26 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     print("Drawing dependency graph...")
                     task_system.draw()
                 elif option == 'det':
+                    print("Testing if the task system is deterministic...") 
                     task_system.detTestRnd()
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()
                 elif option == 'matrix':
-                    task_system.createMatrix()
+                    matrix = task_system.createMatrix()
+                    print(matrix)
                 elif option == 'seq':
                     print("Running the task system sequentially...")
-                    task_system.runSeq()
+                    execution_order, time = task_system.runSeq()
+                    print(f"Task system executed in {time:.5f}sec.")
+                    print(f"Execution order: {execution_order}")
                 elif option == 'run':
                     print("Running the task system...")
-                    task_system.run()
+                    time = task_system.run()
+                    print(f"Task system executed in {time:.5f} using max parallelism!")
                 elif option == 'new':
                     self.test_message()
-                elif option == 'exit':
+                elif option == 'exit' or option == 'quit':
                     break
                 else:
                     print("Invalid option. Please select one of the available options.")
