@@ -6,3 +6,6 @@ __pycache__/
 
 # PDFs for the project file
 *.pdf
+
+# PPTX for the slides
+*.pptx
