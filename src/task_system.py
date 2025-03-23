@@ -108,6 +108,29 @@ class TaskSystem:
 
         return transitive_closure
                 
+    def createMatrix(self):
+        # Create max parallelism matrix
+        task_names = list(self.tasks.keys())
+        n = len(task_names)
+        transitive_closure = self.createTransitiveClosureMatrix()
+
+        # Create the max parallelism matrix by removing useless edges 
+        max_parallelism_matrix = transitive_closure.copy()
+        for i in range(n):
+            for j in range(n):
+                if i == j or transitive_closure[i, j] == 0:
+                    continue
+
+                task1 = self.tasks[task_names[i]]
+                task2 = self.tasks[task_names[j]]
+                # If two tasks are non-conflicting, they can run in parallel
+                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+                    max_parallelism_matrix[i, j] = 1
+                else:
+                    max_parallelism_matrix[i, j] = 0
+
+        return max_parallelism_matrix
+    
     def areTasksConflicting(self, task1, task2):
         task_names = list(self.tasks.keys())
         transitive_closure = self.createTransitiveClosureMatrix()
@@ -207,66 +230,36 @@ class TaskSystem:
         
         elapsed_time = time.time() - start_time
         return elapsed_time
-
-    def createMatrix(self):
-        # Create max parallelism matrix
-        task_names = list(self.tasks.keys())
-        n = len(task_names)
-        transitive_closure = self.createTransitiveClosureMatrix()
-
-        # Create the max parallelism matrix by removing useless edges 
-        max_parallelism_matrix = transitive_closure.copy()
-        for i in range(n):
-            for j in range(n):
-                if i == j or transitive_closure[i, j] == 0:
-                    continue
-
-                task1 = self.tasks[task_names[i]]
-                task2 = self.tasks[task_names[j]]
-                # If two tasks are non-conflicting, they can run in parallel
-                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
-                    max_parallelism_matrix[i, j] = 1
-                else:
-                    max_parallelism_matrix[i, j] = 0
-
-        return max_parallelism_matrix
     
-    def detTestRnd(self, nb_trials=10):
-        start_time = time.time()
-        system_deterministic = True
+    def detTestRnd(self, nb_trials=1):
+        is_deterministic = True
+        results = []
 
-        for trial in range(nb_trials):
-            # Random seed for each trial
-            seed = random.randint(0, 10**6)
-            results = []
+        for _ in range(nb_trials):
+            # Collect shared variables and randomize them
+            shared_variables = {resource: random.randint(1, 100) for task in self.tasks.values() for resource in task.reads + task.writes}
+
+            # Give to the tasks the shared variables
+            for task in self.tasks.values():
+                task.set_initial_values(shared_variables)
 
             for _ in range(2):
-                # Set the random seed for this run
-                random.seed(seed)
-
-                # Randomize the initial state of the tasks
-                for task in self.tasks.values():
-                    task.randomize_result()
-
-                # Run the current task system
                 self.run()
+                result = {var: task.get_final_value(var) for task in self.tasks.values() for var in task.writes}
+                results.append(result)
 
-                # Collect the state of each task and store it
-                state = {name: task.get_result() for name, task in self.tasks.items()}
-                results.append(state)
+            # Check if the results are the same
+            if results[0] != results[1]:
+                is_deterministic = False
+                break
 
-            # Check if all results are the same
-            if not all(result == results[0] for result in results):
-                print(f"Non-deterministic behavior detected in trial {trial + 1}.")
-                print(f"Results: {results}")
-                system_deterministic = False
+        if is_deterministic:
+            print("Task system is deterministic")
+        else:
+            print("Task system is non-deterministic")
 
-        elapsed_time = time.time() - start_time
-        if system_deterministic:
-            print(f"Test ended in {elapsed_time:.5f}sec with {nb_trials} trials: System is deterministic.")
+        return is_deterministic
 
-        return system_deterministic
-    
         
     """
         After some (long) research for drawing graphs with levels, I found that Graphviz is 
