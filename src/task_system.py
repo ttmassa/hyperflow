@@ -2,7 +2,6 @@ import threading
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-import random
 import time
 
 class TaskSystem:
@@ -231,34 +230,48 @@ class TaskSystem:
         elapsed_time = time.time() - start_time
         return elapsed_time
     
-    def detTestRnd(self, nb_trials=1):
+    def detTestRnd(self, nb_trials=5, global_vars=None):
         is_deterministic = True
-        results = []
+        start_time = time.time()
+
+        if global_vars is None:
+            global_vars = globals()
+
+        shared_variables = {var for task in self.tasks.values() for var in task.reads + task.writes}
 
         for _ in range(nb_trials):
-            # Collect shared variables and randomize them
-            shared_variables = {resource: random.randint(1, 100) for task in self.tasks.values() for resource in task.reads + task.writes}
+            results = []
 
-            # Give to the tasks the shared variables
+            # Randomize the variables used by the system
             for task in self.tasks.values():
-                task.set_initial_values(shared_variables)
+                for var in task.reads + task.writes:
+                    global_vars[var] = np.random.randint(0, 100)
 
-            for _ in range(2):
+            # Store the values of the variables before the execution
+            initial_values = {var: global_vars[var] for var in shared_variables}
+
+            for i in range(2):
                 self.run()
-                result = {var: task.get_final_value(var) for task in self.tasks.values() for var in task.writes}
+                
+                # Store the values of the variables after the execution
+                result = {var: global_vars[var] for var in shared_variables}
                 results.append(result)
+                
+                # Reset the variables to their random values given at the beggining of this trial
+                for var, value in initial_values.items():
+                    global_vars[var] = value
 
-            # Check if the results are the same
             if results[0] != results[1]:
                 is_deterministic = False
                 break
-
+        
         if is_deterministic:
-            print("Task system is deterministic")
+            print("The task system is deterministic")
         else:
-            print("Task system is non-deterministic")
+            print("The task system is not deterministic")
 
-        return is_deterministic
+        elapsed_time = time.time() - start_time
+        return is_deterministic, elapsed_time
 
         
     """

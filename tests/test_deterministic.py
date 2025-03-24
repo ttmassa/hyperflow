@@ -1,9 +1,7 @@
-import pytest
-import random
 from src.task import Task
 from src.task_system import TaskSystem
 
-# Global shared variables
+# Global variables
 X, Y, Z = 0, 0, 0
 
 def deterministic_task_system():
@@ -34,4 +32,4 @@ def deterministic_task_system():
 
 def test_deterministic():
     system = deterministic_task_system()
-    assert system.detTestRnd(nb_trials=5)
+    assert system.detTestRnd(nb_trials=5, global_vars=globals())
