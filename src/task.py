@@ -1,5 +1,5 @@
 class Task:
-    def __init__(self, name, reads=[], writes=[], run=None):
+    def __init__(self, name: str, reads: list[str] = [], writes: list[str] = [], run: callable = None):
         self.name = name
         self.reads = reads
         self.writes = writes

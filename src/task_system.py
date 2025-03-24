@@ -1,11 +1,12 @@
 import threading
+import time
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-import time
+from src.task import Task
 
 class TaskSystem:
-    def __init__(self, tasks, precedence):
+    def __init__(self, tasks: list[Task], precedence: dict[str, list[str]] = {}):
         # Use task name as key for easy access
         self.tasks = {task.name: task for task in tasks}
         # Dictionary of task dependencies
