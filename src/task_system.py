@@ -238,12 +238,13 @@ class TaskSystem:
         if global_vars is None:
             global_vars = globals()
 
+        # Get all the variables used by the system
         shared_variables = {var for task in self.tasks.values() for var in task.reads + task.writes}
 
         for _ in range(nb_trials):
             results = []
 
-            # Randomize the variables used by the system
+            # Randomize the variables
             for task in self.tasks.values():
                 for var in task.reads + task.writes:
                     global_vars[var] = np.random.randint(0, 100)
@@ -264,12 +265,11 @@ class TaskSystem:
 
             if results[0] != results[1]:
                 is_deterministic = False
+                print("Task system is not deterministic: ", results[0], results[1])
                 break
         
         if is_deterministic:
-            print("The task system is deterministic")
-        else:
-            print("The task system is not deterministic")
+            print("Task system is deterministic!")
 
         elapsed_time = time.time() - start_time
         return is_deterministic, elapsed_time

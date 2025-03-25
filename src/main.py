@@ -94,7 +94,7 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     task_system.draw()
                 elif option == 'det':
                     print("Testing if the task system is deterministic...") 
-                    task_system.detTestRnd()
+                    task_system.detTestRnd(nb_trials=5, global_vars=globals())
                 elif option == 'time':
                     print("Comparing execution times...")
                     task_system.parCost()
