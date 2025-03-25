@@ -178,7 +178,7 @@ class TaskSystem:
         elapsed_time = time.time() - start_time
         return executed, elapsed_time
 
-    def run(self, randomize_names=False):
+    def run(self, randomize_names=False, repr=False):
         # Run tasks with maximum parallelism using the matrix
         start_time = time.time()
         task_names = list(self.tasks.keys())
@@ -187,6 +187,8 @@ class TaskSystem:
 
         events = {task_name: threading.Event() for task_name in task_names}
         resource_locks = {resource: threading.Lock() for task in self.tasks.values() for resource in task.reads + task.writes}
+
+        execution_representation = "start\n"
 
         def runTask(task):
             for dep in self.getDependencies(task.name):
@@ -218,11 +220,16 @@ class TaskSystem:
                 if all(matrix[j, i] == 0 or task_names[j] in executed for j in range(n)):
                     runnable_tasks.append(self.tasks[task_name])
 
-            # Execute all runnable tasks in parallel
-            threads = []
             # Randomize runnable_tasks to allow for potential non-deterministic behavior to be detected by detTestRnd
             if randomize_names:
                 random.shuffle(runnable_tasks)
+            # Add parallel block if multiple tasks are runnable
+            if len(runnable_tasks) > 1:
+                execution_representation += f"\tparbegin {' '.join(task.name for task in runnable_tasks)} parend;\n"
+            else:
+                execution_representation += f"\t{' '.join(task.name for task in runnable_tasks)}\n"
+            # Execute all runnable tasks in parallel
+            threads = []
             for task in runnable_tasks:
                 t = threading.Thread(target=runTask, args=(task,))
                 t.start()
@@ -233,6 +240,9 @@ class TaskSystem:
                 t.join()
         
         elapsed_time = time.time() - start_time
+        execution_representation += "end"
+        if repr:
+            return elapsed_time, execution_representation
         return elapsed_time
     
     def detTestRnd(self, nb_trials=5, global_vars=None):

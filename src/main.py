@@ -77,7 +77,8 @@ class CustomArgumentParser(argparse.ArgumentParser):
         4. Create the matrix : 'matrix'
         5. Run the task system sequentially : 'seq'
         6. Run the task system in parallel : 'run'
-        7. Test another premade task system : 'new'
+        7. Get the textual representation of the max parallelism execution : 'text'
+        8. Test another premade task system : 'new'
                                           
         Type 'exit' or 'quit' to exit the program.
         """)
@@ -110,6 +111,10 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     print("Running the task system...")
                     time = task_system.run()
                     print(f"Task system executed in {time:.5f} using max parallelism!")
+                elif option == 'text':
+                    time, textual_representation = task_system.run(repr=True)
+                    print(f"Task system executed in {time:.5f} using max parallelism!")
+                    print(textual_representation)
                 elif option == 'new':
                     self.test_message()
                 elif option == 'exit' or option == 'quit':
