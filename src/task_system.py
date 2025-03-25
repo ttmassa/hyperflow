@@ -1,5 +1,6 @@
 import threading
 import time
+import random
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -177,7 +178,7 @@ class TaskSystem:
         elapsed_time = time.time() - start_time
         return executed, elapsed_time
 
-    def run(self):
+    def run(self, randomize_names=False):
         # Run tasks with maximum parallelism using the matrix
         start_time = time.time()
         task_names = list(self.tasks.keys())
@@ -219,6 +220,9 @@ class TaskSystem:
 
             # Execute all runnable tasks in parallel
             threads = []
+            # Randomize runnable_tasks to allow for potential non-deterministic behavior to be detected by detTestRnd
+            if randomize_names:
+                random.shuffle(runnable_tasks)
             for task in runnable_tasks:
                 t = threading.Thread(target=runTask, args=(task,))
                 t.start()
@@ -233,7 +237,6 @@ class TaskSystem:
     
     def detTestRnd(self, nb_trials=5, global_vars=None):
         is_deterministic = True
-        start_time = time.time()
 
         if global_vars is None:
             global_vars = globals()
@@ -247,13 +250,15 @@ class TaskSystem:
             # Randomize the variables
             for task in self.tasks.values():
                 for var in task.reads + task.writes:
+                    if var not in global_vars:
+                        print(f"Warning: Variable '{var}' from task {task.name} does not exist in the globals dictionary.")
                     global_vars[var] = np.random.randint(0, 100)
 
             # Store the values of the variables before the execution
             initial_values = {var: global_vars[var] for var in shared_variables}
 
-            for i in range(2):
-                self.run()
+            for _ in range(2):
+                self.run(randomize_names=True)
                 
                 # Store the values of the variables after the execution
                 result = {var: global_vars[var] for var in shared_variables}
@@ -271,9 +276,7 @@ class TaskSystem:
         if is_deterministic:
             print("Task system is deterministic!")
 
-        elapsed_time = time.time() - start_time
-        return is_deterministic, elapsed_time
-
+        return is_deterministic
         
     """
         After some (long) research for drawing graphs with levels, I found that Graphviz is 

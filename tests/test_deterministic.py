@@ -30,6 +30,33 @@ def deterministic_task_system():
 
     return TaskSystem(tasks, precedence)
 
+def non_deterministic_task_system():
+    # Create a non-deterministic task system
+    def runT1():
+        global X
+        X += 1
+
+    def runT2():
+        global Y
+        Y += 2
+
+    def runT3():
+        global Z
+        Z = X + Y
+
+    # Not specify all r/w domains
+    tasks = [
+        Task("T1", writes=["X"], run=runT1),
+        Task("T2", writes=["Y"], run=runT2),
+        Task("T3", writes=["Z"], run=runT3),
+    ]
+
+    return TaskSystem(tasks)
+
 def test_deterministic():
     system = deterministic_task_system()
     assert system.detTestRnd(nb_trials=5, global_vars=globals())
+    
+def test_non_deterministic_task_system():
+    system = non_deterministic_task_system()
+    assert not system.detTestRnd(nb_trials=5, global_vars=globals())
