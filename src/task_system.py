@@ -152,7 +152,7 @@ class TaskSystem:
     def runSeq(self):
         # Run tasks sequentially
         start_time = time.time()
-        executed = set()
+        executed = []
 
         """
             Because we want to allow tasks to be in any order in the self.tasks list, I need 
@@ -169,7 +169,7 @@ class TaskSystem:
                 visit(dep)
             
             self.tasks[task_name].execute()
-            executed.add(task_name)
+            executed.append(task_name)
 
         for task_name in self.tasks.keys():
             visit(task_name)
