@@ -125,13 +125,16 @@ class TaskSystem:
                 task1 = self.tasks[task_names[i]]
                 task2 = self.tasks[task_names[j]]
                 # If two tasks are non-conflicting, they can run in parallel
-                if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
+                if self.isBernstein(task1, task2):
                     max_parallelism_matrix[i, j] = 1
                 else:
                     max_parallelism_matrix[i, j] = 0
 
         return max_parallelism_matrix
     
+    def isBernstein(self, task1, task2):
+        return set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes)
+
     def areTasksConflicting(self, task1, task2):
         task_names = list(self.tasks.keys())
         transitive_closure = self.createTransitiveClosureMatrix()
@@ -141,10 +144,7 @@ class TaskSystem:
             return False
             
         # Bernstein condition
-        if set(task1.reads).intersection(task2.writes) or set(task1.writes).intersection(task2.reads) or set(task1.writes).intersection(task2.writes):
-            return True
-        
-        return False
+        return self.isBernstein(task1, task2)
     
     def getDependencies(self, task_name):
         # Retrieve the list of dependencies for a given task
