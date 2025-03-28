@@ -10,9 +10,12 @@ import random
 import time
 import numpy as np
 
+A, B, C, D, E, F = 0, 0, 0, 0, 0, 0
+
 def simple_task_system():
     def simple_result():
-        time.sleep(0.01)
+        # Mimic some computation time
+        time.sleep(0.1)
         return {"value": random.randint(1, 100)}
 
     tasks = [
@@ -32,11 +35,12 @@ def simple_task_system():
         "T6": ["T4", "T5"]
     }
 
-    return TaskSystem(tasks, precedence)
+    return TaskSystem(tasks, precedence), globals()
 
 def fibonacci_task_system():
     def fibonacci(n):
-        time.sleep(0.001)
+        # Mimic some computation time
+        time.sleep(0.01)
         if n <= 1:
             return n
         else:
@@ -45,11 +49,12 @@ def fibonacci_task_system():
     tasks = [Task(name=f"T{i}", run=lambda i=i: fibonacci(i)) for i in range(8)]
     precedence = {f"T{i}": [f"T{i-1}", f"T{i-2}"] for i in range(2, 8)}
 
-    return TaskSystem(tasks, precedence)
+    return TaskSystem(tasks, precedence), globals()
 
 def matrix_multiplication_task_system():
     def multiply_matrices(A, B):
-        time.sleep(0.01)
+        # Mimic some computation time
+        time.sleep(0.5)
         return np.dot(A, B)
 
     A = np.random.rand(2, 2)
@@ -69,4 +74,4 @@ def matrix_multiplication_task_system():
         "T4": ["T3"]
     }
 
-    return TaskSystem(tasks, precedence)
+    return TaskSystem(tasks, precedence), globals()

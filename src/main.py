@@ -52,18 +52,20 @@ class CustomArgumentParser(argparse.ArgumentParser):
         print(test_message)
 
         try: 
-            task_system = None
+            task_system, globals = None, None
             while not task_system:
                 choice = input("Select a task system: ")
                 if choice == '1':
                     print("Simple task system selected")
-                    task_system = simple_task_system()
+                    task_system, globals = simple_task_system()
                 elif choice == '2':
                     print("Fibonacci task system selected")
-                    task_system = fibonacci_task_system()
+                    task_system, globals = fibonacci_task_system()
                 elif choice == '3':
                     print("Matrix multiplication task system")
-                    task_system = matrix_multiplication_task_system()
+                    task_system, globals = matrix_multiplication_task_system()
+                elif choice == 'exit' or choice == 'quit':
+                    sys.exit()
                 else:
                     print("Invalid choice. Please select the number of the task system you want to test.")
         except KeyboardInterrupt:
@@ -95,10 +97,10 @@ class CustomArgumentParser(argparse.ArgumentParser):
                     task_system.draw()
                 elif option == 'det':
                     print("Testing if the task system is deterministic...") 
-                    task_system.detTestRnd(nb_trials=5, global_vars=globals())
+                    task_system.detTestRnd(nb_trials=5, global_vars=globals)
                 elif option == 'time':
                     print("Comparing execution times...")
-                    task_system.parCost()
+                    task_system.parCost(runs=3)
                 elif option == 'matrix':
                     matrix = task_system.createMatrix()
                     print(matrix)
